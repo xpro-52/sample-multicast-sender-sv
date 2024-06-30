@@ -1,21 +1,23 @@
 import socket
-import struct
 import time
+from datetime import datetime
 
-# Set multicast address and port
+# network interface of sender
+sender_address = '192.168.8.10'
+
+# address and port of multicast group
 multicast_group = '224.1.1.1'
 port = 5004
 
-# Create socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-ttl = struct.pack('b', 1)
-sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+# finally close
+with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+    sock.setsockopt(socket.IPPROTO_IP,  # ipv4
+                         socket.IP_MULTICAST_IF,  # do multicast bellow interface
+                         socket.inet_aton(sender_address))
 
-try:
     while True:
-        message = b'This is a multicast message'
+        now = datetime.strftime(datetime.now(), '%Y-%M-%d %H:%M:%S')
+        message = f'[{now}] This is a multicast message'
         print(f'Sending "{message}" to {multicast_group}:{port}')
-        sock.sendto(message, (multicast_group, port))
+        sock.sendto(message.encode(), (multicast_group, port))
         time.sleep(1)
-finally:
-    sock.close()
